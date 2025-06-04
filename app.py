@@ -36,6 +36,7 @@ def process():
         return send_file(buffer, as_attachment=True, download_name="converted_annotations.json")
 
 # Added in V2
+"""
 @app.route('/preview-masks', methods=['POST'])
 def preview_masks():
     file = request.files['file']
@@ -60,6 +61,35 @@ def preview_masks():
                 masks.append(f"data:image/png;base64,{b64}")
             results[img['file_name']] = masks
         return jsonify(results)
+"""
+@app.route('/preview-masks', methods=['POST'])
+def preview_masks():
+    try:
+        file = request.files['file']
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
+            file.save(tmp.name)
+            coco_data = load_json(tmp.name)
+            coco = COCO(tmp.name)
+
+            id_to_cat = {cat['id']: cat['name'] for cat in coco_data['categories']}
+            results = {}
+
+            for img in coco_data['images']:
+                image_id = img['id']
+                ann_ids = coco.getAnnIds(imgIds=image_id)
+                masks = []
+                for ann_id in ann_ids:
+                    ann = coco.loadAnns(ann_id)[0]
+                    mask = coco.annToMask(ann)
+                    mask = (mask * 255).astype(np.uint8)
+                    _, buffer = cv2.imencode('.png', mask)
+                    b64 = base64.b64encode(buffer).decode()
+                    masks.append(f"data:image/png;base64,{b64}")
+                results[img['file_name']] = masks
+            return jsonify(results)
+    except Exception as e:
+        print("Preview mask error:", e)
+        return jsonify({"error": str(e)}), 500
 """
 if __name__ == "__main__":
     app.run(debug=True)
