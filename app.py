@@ -58,6 +58,9 @@ def preview_masks():
                 masks.append(f"data:image/png;base64,{b64}")
             results[img['file_name']] = masks
         return jsonify(results)
-
+"""
 if __name__ == "__main__":
     app.run(debug=True)
+"""
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=10000)
