@@ -6,9 +6,10 @@ from pycocotools.coco import COCO
 import numpy as np
 import cv2
 import base64
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"": {"origins": "", "supports_credentials": True}})
 
 @app.route('/get-categories', methods=['POST'])
 def get_categories():
